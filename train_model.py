@@ -124,8 +124,8 @@ print(classification_report(labels, preds, target_names=["Real", "Fake"]))
 with open("model/model.pkl",      "wb") as f: pickle.dump(model, f)
 with open("model/vectorizer.pkl", "wb") as f: pickle.dump(vectorizer, f)
 
-print(" Saved → model/model.pkl")
-print(" Saved → model/vectorizer.pkl")
+print(" Saved: model/model.pkl")
+print(" Saved: model/vectorizer.pkl")
 
 # ── Quick sanity test ─────────────────────────────────────────
 tests = [
