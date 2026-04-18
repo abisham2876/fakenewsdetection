@@ -100,7 +100,7 @@ labels = [0] * len(real_news) + [1] * len(fake_news)
 print("=" * 50)
 print("  Verifai — Model Training")
 print("=" * 50)
-print(f"\n📊 Dataset: {len(texts)} examples  ({len(real_news)} real / {len(fake_news)} fake)")
+print(f"\n Dataset: {len(texts)} examples  ({len(real_news)} real / {len(fake_news)} fake)")
 
 vectorizer = TfidfVectorizer(
     max_features=8000,
@@ -111,21 +111,21 @@ vectorizer = TfidfVectorizer(
 X = vectorizer.fit_transform(texts)
 
 # ── Train ─────────────────────────────────────────────────────
-print("🧠 Training Logistic Regression...")
+print(" Training Logistic Regression...")
 model = LogisticRegression(max_iter=1000, C=1.5, random_state=42)
 model.fit(X, labels)
 
 preds    = model.predict(X)
 accuracy = accuracy_score(labels, preds)
-print(f"✅ Training accuracy: {accuracy * 100:.1f}%\n")
+print(f" Training accuracy: {accuracy * 100:.1f}%\n")
 print(classification_report(labels, preds, target_names=["Real", "Fake"]))
 
 # ── Save ──────────────────────────────────────────────────────
 with open("model/model.pkl",      "wb") as f: pickle.dump(model, f)
 with open("model/vectorizer.pkl", "wb") as f: pickle.dump(vectorizer, f)
 
-print("💾 Saved → model/model.pkl")
-print("💾 Saved → model/vectorizer.pkl")
+print(" Saved → model/model.pkl")
+print(" Saved → model/vectorizer.pkl")
 
 # ── Quick sanity test ─────────────────────────────────────────
 tests = [
@@ -140,8 +140,8 @@ for txt, expected in tests:
     pred = model.predict(v)[0]
     prob = max(model.predict_proba(v)[0])
     got  = "fake" if pred == 1 else "real"
-    ok   = "✅" if got == expected else "❌"
+    ok   = "" if got == expected else ""
     print(f"  {ok} [{got} {prob*100:.0f}%] {txt[:60]}")
 
-print("\n🎉 Done! Run:  python app.py")
+print("\n Done! Run:  python app.py")
 print("=" * 50)
