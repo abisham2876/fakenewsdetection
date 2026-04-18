@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Sign in — Verifai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}"/>
+</head>
+<body>
+
+<div class="auth-split">
+
+  <!-- LEFT PANEL -->
+  <div class="auth-left">
+    <div class="auth-left-inner">
+      <div class="brand">
+        <div class="brand-mark">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M10 2L17 6V14L10 18L3 14V6L10 2Z" stroke="#0f0f0f" stroke-width="1.6" stroke-linejoin="round"/>
+            <path d="M10 7V13M10 7L7.5 9.5M10 7L12.5 9.5" stroke="#0f0f0f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="brand-name">Verifai</span>
+      </div>
+
+      <div class="auth-hero">
+        <p class="auth-hero-eyebrow">News authenticity platform</p>
+        <h1 class="auth-hero-title">Know what's real<br><em>before you share.</em></h1>
+        <p class="auth-hero-sub">Verifai analyses news content and gives you a clear, unbiased verdict in seconds — so you can stay informed with confidence.</p>
+      </div>
+
+      <div class="auth-stats">
+        <div class="stat"><span class="stat-num">2.4M+</span><span class="stat-label">Articles checked</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">98%</span><span class="stat-label">User satisfaction</span></div>
+        <div class="stat-divider"></div>
+        <div class="stat"><span class="stat-num">&lt;2s</span><span class="stat-label">Avg. response time</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+
+      <div class="auth-form-header">
+        <h2>Welcome back</h2>
+        <p>Sign in to your Verifai account</p>
+      </div>
+
+      <!-- Google SSO (demo) -->
+      <button class="google-btn" onclick="googleDemo()">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+          <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+          <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+          <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+        </svg>
+        Continue with Google
+      </button>
+
+      <div class="or-divider"><span>or</span></div>
+
+      <!-- Email/Password form -->
+      <form id="loginForm" onsubmit="handleLogin(event)" novalidate>
+        <div class="field-group">
+          <label for="email">Email address</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email"/>
+          <span class="field-error" id="emailErr"></span>
+        </div>
+
+        <div class="field-group">
+          <div class="field-label-row">
+            <label for="password">Password</label>
+            <a class="forgot-link" href="#">Forgot password?</a>
+          </div>
+          <div class="password-wrap">
+            <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password"/>
+            <button type="button" class="pw-toggle" onclick="togglePw('password', this)" aria-label="Show password">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <span class="field-error" id="pwErr"></span>
+        </div>
+
+        <div class="alert-box" id="alertBox" style="display:none;"></div>
+
+        <button type="submit" class="primary-btn" id="loginBtn">
+          <span class="btn-label">Sign in</span>
+          <span class="btn-spinner" style="display:none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          </span>
+        </button>
+      </form>
+
+      <p class="switch-link">Don't have an account? <a href="/register">Create one free</a></p>
+
+      <p class="terms-note">By signing in, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a></p>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Auth helpers ──────────────────────────────────────────────
+function getUsers() {
+  return JSON.parse(localStorage.getItem("verifai_users") || "[]");
+}
+
+function setSession(user) {
+  localStorage.setItem("verifai_session", JSON.stringify({ name: user.name, email: user.email }));
+}
+
+function isLoggedIn() {
+  return !!localStorage.getItem("verifai_session");
+}
+
+// Redirect if already logged in
+if (isLoggedIn()) window.location.href = "/dashboard";
+
+// ── Login handler ─────────────────────────────────────────────
+function handleLogin(e) {
+  e.preventDefault();
+  clearErrors();
+
+  const email    = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  let ok = true;
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showError("emailErr", "Enter a valid email address.");
+    ok = false;
+  }
+  if (!password) {
+    showError("pwErr", "Password is required.");
+    ok = false;
+  }
+  if (!ok) return;
+
+  setLoading(true);
+
+  setTimeout(() => {
+    const users = getUsers();
+    const match = users.find(u => u.email === email && u.password === btoa(password));
+
+    if (match) {
+      setSession(match);
+      window.location.href = "/dashboard";
+    } else {
+      // Demo fallback: allow demo@verifai.com / demo1234
+      if (email === "demo@verifai.com" && password === "demo1234") {
+        setSession({ name: "Demo User", email });
+        window.location.href = "/dashboard";
+        return;
+      }
+      showAlert("Incorrect email or password. Try demo@verifai.com / demo1234");
+      setLoading(false);
+    }
+  }, 900);
+}
+
+function googleDemo() {
+  setSession({ name: "Google User", email: "google@demo.com" });
+  window.location.href = "/dashboard";
+}
+
+// ── UI helpers ────────────────────────────────────────────────
+function clearErrors() {
+  ["emailErr","pwErr"].forEach(id => { document.getElementById(id).textContent = ""; });
+  const a = document.getElementById("alertBox");
+  a.style.display = "none"; a.textContent = "";
+}
+
+function showError(id, msg) {
+  document.getElementById(id).textContent = msg;
+}
+
+function showAlert(msg) {
+  const a = document.getElementById("alertBox");
+  a.textContent = msg; a.style.display = "block";
+}
+
+function setLoading(on) {
+  const btn = document.getElementById("loginBtn");
+  btn.querySelector(".btn-label").style.display  = on ? "none"   : "inline";
+  btn.querySelector(".btn-spinner").style.display = on ? "inline" : "none";
+  btn.disabled = on;
+}
+
+function togglePw(inputId, btn) {
+  const input = document.getElementById(inputId);
+  input.type = input.type === "password" ? "text" : "password";
+}
+</script>
+</body>
+</html>

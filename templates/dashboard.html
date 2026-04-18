@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Dashboard — Verifai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}"/>
+</head>
+<body>
+
+<!-- AUTH GUARD: redirect to login if no session -->
+<script>
+(function() {
+  const session = localStorage.getItem("verifai_session");
+  if (!session) window.location.href = "/login";
+})();
+</script>
+
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="/dashboard" class="nav-brand">
+      <div class="nav-mark">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+          <path d="M10 2L17 6V14L10 18L3 14V6L10 2Z" stroke="#0f0f0f" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M10 7V13M10 7L7.5 9.5M10 7L12.5 9.5" stroke="#0f0f0f" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="nav-brand-name">Verifai</span>
+    </a>
+
+    <div class="nav-links">
+      <button class="nav-link active">Dashboard</button>
+      <button class="nav-link">History</button>
+      <button class="nav-link">Reports</button>
+    </div>
+
+    <div class="nav-right">
+      <div class="nav-user-wrap" id="navUserWrap">
+        <div class="nav-avatar" id="navAvatar">–</div>
+        <span class="nav-user-name" id="navUserName"></span>
+        <div class="nav-dropdown" id="navDropdown">
+          <div class="dropdown-user" id="dropdownUser"></div>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item" onclick="logout()">Sign out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════ HERO STRIP ═══════════════════ -->
+<div class="hero-strip">
+  <div class="hero-strip-inner">
+    <div>
+      <p class="hero-eyebrow">Authenticity check</p>
+      <h1 class="hero-title">Check news authenticity</h1>
+      <p class="hero-sub">Paste an article or share a URL. Get a clear, unbiased verdict in seconds.</p>
+    </div>
+    <div class="hero-stat-row">
+      <div class="hero-stat"><span class="hero-stat-num" id="userChecks">0</span><span class="hero-stat-label">Your checks</span></div>
+      <div class="hero-stat-div"></div>
+      <div class="hero-stat"><span class="hero-stat-num">2.4M</span><span class="hero-stat-label">Total checked</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<main class="main-wrap">
+
+  <!-- INPUT CARD -->
+  <div class="input-card" id="inputCard">
+    <div class="tab-row">
+      <button class="tab active" onclick="switchTab('text', this)" data-tab="text">Article text</button>
+      <button class="tab" onclick="switchTab('url', this)" data-tab="url">News URL</button>
+    </div>
+
+    <div class="tab-body">
+      <div id="pane-text">
+        <textarea id="newsText" class="text-input" placeholder="Paste a news article, headline, or any text you want to verify…" rows="8"></textarea>
+      </div>
+      <div id="pane-url" style="display:none;">
+        <div class="url-input-wrap">
+          <svg class="url-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <input type="url" id="newsUrl" class="url-input" placeholder="https://example.com/article…"/>
+        </div>
+        <p class="url-note">Paste the full URL of a news article. We'll analyse its content.</p>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <button class="check-btn" id="checkBtn" onclick="runCheck()">
+        <span id="btnLabel">Check news</span>
+        <svg id="btnArrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <svg id="btnSpinner" class="spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+      </button>
+      <span class="check-hint">Results appear below</span>
+    </div>
+  </div>
+
+  <!-- RESULT CARD (hidden until result comes in) -->
+  <div class="result-card" id="resultCard" style="display:none;">
+
+    <!-- FAKE result -->
+    <div id="result-fake" style="display:none;">
+      <div class="result-top">
+        <div class="verdict-row">
+          <div class="verdict-pill verdict-pill-fake">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            Likely misinformation
+          </div>
+          <span class="result-conf" id="fake-conf">— % confidence</span>
+        </div>
+        <p class="result-explanation" id="fake-explanation"></p>
+      </div>
+      <div class="score-section">
+        <div class="score-label-row">
+          <span class="score-label">Authenticity score</span>
+          <span class="score-value score-fake" id="fake-score-val">0</span>
+        </div>
+        <div class="score-track">
+          <div class="score-fill score-fill-fake" id="fake-fill"></div>
+        </div>
+        <div class="score-range"><span>Low</span><span>High</span></div>
+      </div>
+    </div>
+
+    <!-- REAL result -->
+    <div id="result-real" style="display:none;">
+      <div class="result-top">
+        <div class="verdict-row">
+          <div class="verdict-pill verdict-pill-real">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Appears credible
+          </div>
+          <span class="result-conf" id="real-conf">— % confidence</span>
+        </div>
+        <p class="result-explanation" id="real-explanation"></p>
+      </div>
+      <div class="score-section">
+        <div class="score-label-row">
+          <span class="score-label">Authenticity score</span>
+          <span class="score-value score-real" id="real-score-val">0</span>
+        </div>
+        <div class="score-track">
+          <div class="score-fill score-fill-real" id="real-fill"></div>
+        </div>
+        <div class="score-range"><span>Low</span><span>High</span></div>
+      </div>
+    </div>
+
+    <div class="result-actions">
+      <button class="action-btn" onclick="resetCheck()">Check another</button>
+      <button class="action-btn action-btn-primary" onclick="saveToHistory()">Save report</button>
+    </div>
+
+  </div>
+
+  <!-- INFO SECTION -->
+  <div class="info-grid">
+
+    <div class="info-card">
+      <div class="info-card-label">HOW TO USE</div>
+      <h3 class="info-card-title">Three simple steps</h3>
+      <ol class="info-steps">
+        <li><strong>Paste</strong> a news headline or article into the text field, or enter a URL.</li>
+        <li><strong>Click</strong> "Check news" and wait a moment for the analysis to complete.</li>
+        <li><strong>Review</strong> your verdict. Save or share the report if needed.</li>
+      </ol>
+    </div>
+
+    <div class="info-card">
+      <div class="info-card-label">STAY INFORMED</div>
+      <h3 class="info-card-title">Tips for media literacy</h3>
+      <ul class="info-tips">
+        <li>Always read beyond the headline before forming an opinion.</li>
+        <li>Cross-check important news with two independent outlets.</li>
+        <li>Be cautious of stories that trigger strong emotional reactions.</li>
+        <li>Check the publish date — old stories often resurface misleadingly.</li>
+        <li>Look for named sources. Anonymous "insiders" are a red flag.</li>
+      </ul>
+    </div>
+
+    <div class="info-card info-card-about">
+      <div class="info-card-label">ABOUT</div>
+      <h3 class="info-card-title">What is Verifai?</h3>
+      <p class="info-about-text">Verifai is an independent authenticity tool that helps you evaluate the credibility of any news content. We analyse writing patterns, source signals, and structural cues to give you a clear, unbiased verdict.</p>
+      <div class="about-badges">
+        <span class="about-badge"><span class="badge-dot badge-green"></span>Live</span>
+        <span class="about-badge">2.4M+ checked</span>
+        <span class="about-badge">Free forever</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- HISTORY SECTION -->
+  <div class="history-section" id="historySection">
+    <div class="history-header">
+      <h3 class="history-title">Recent checks</h3>
+      <button class="clear-btn" onclick="clearHistory()">Clear all</button>
+    </div>
+    <div id="historyList" class="history-list"></div>
+    <div id="historyEmpty" class="history-empty">
+      <p>Your check history will appear here.</p>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <span class="footer-brand">Verifai</span>
+    <span class="footer-copy">© 2024 Verifai. Built to fight misinformation.</span>
+    <div class="footer-links">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Support</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ── Session ────────────────────────────────────────────────────
+const session = JSON.parse(localStorage.getItem("verifai_session") || "null");
+if (!session) { window.location.href = "/login"; }
+
+// Display user info in navbar
+const initials = session.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0,2);
+document.getElementById("navAvatar").textContent    = initials;
+document.getElementById("navUserName").textContent  = session.name.split(" ")[0];
+document.getElementById("dropdownUser").textContent = session.name + " · " + session.email;
+
+// Toggle dropdown
+document.getElementById("navUserWrap").addEventListener("click", function(e) {
+  e.stopPropagation();
+  document.getElementById("navDropdown").classList.toggle("open");
+});
+document.addEventListener("click", () => {
+  document.getElementById("navDropdown").classList.remove("open");
+});
+
+function logout() {
+  localStorage.removeItem("verifai_session");
+  window.location.href = "/login";
+}
+
+// ── User check counter ─────────────────────────────────────────
+function getCheckCount() { return parseInt(localStorage.getItem("verifai_count_" + session.email) || "0"); }
+function bumpCheckCount() {
+  const n = getCheckCount() + 1;
+  localStorage.setItem("verifai_count_" + session.email, n);
+  document.getElementById("userChecks").textContent = n;
+}
+document.getElementById("userChecks").textContent = getCheckCount();
+
+// ── Tab switching ──────────────────────────────────────────────
+let activeTab = "text";
+function switchTab(tab, btn) {
+  activeTab = tab;
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("pane-text").style.display = tab === "text" ? "block" : "none";
+  document.getElementById("pane-url").style.display  = tab === "url"  ? "block" : "none";
+  hideResult();
+}
+
+// ── Check news ─────────────────────────────────────────────────
+function runCheck() {
+  const text = activeTab === "text"
+    ? document.getElementById("newsText").value.trim()
+    : document.getElementById("newsUrl").value.trim();
+
+  if (!text || text.split(" ").length < 4) {
+    alert("Please enter at least a few words to analyse.");
+    return;
+  }
+
+  setLoading(true);
+  hideResult();
+
+  fetch("/predict", {
+    method:  "POST",
+    headers: { "Content-Type": "application/json" },
+    body:    JSON.stringify({ text })
+  })
+  .then(r => r.json())
+  .then(data => {
+    setLoading(false);
+    if (data.error) { alert(data.error); return; }
+    showResult(data);
+    bumpCheckCount();
+    addToHistory(text, data);
+  })
+  .catch(() => {
+    setLoading(false);
+    alert("Could not connect to the server. Make sure Flask is running.");
+  });
+}
+
+// ── Display result ─────────────────────────────────────────────
+function showResult(data) {
+  document.getElementById("resultCard").style.display = "block";
+  document.getElementById("result-fake").style.display = "none";
+  document.getElementById("result-real").style.display = "none";
+
+  if (data.result === "fake") {
+    document.getElementById("result-fake").style.display = "block";
+    document.getElementById("fake-conf").textContent       = data.confidence + "% confidence";
+    document.getElementById("fake-explanation").textContent = data.explanation;
+    document.getElementById("fake-score-val").textContent  = data.score + " / 100";
+    animateBar("fake-fill", data.score);
+  } else {
+    document.getElementById("result-real").style.display = "block";
+    document.getElementById("real-conf").textContent       = data.confidence + "% confidence";
+    document.getElementById("real-explanation").textContent = data.explanation;
+    document.getElementById("real-score-val").textContent  = data.score + " / 100";
+    animateBar("real-fill", data.score);
+  }
+
+  document.getElementById("resultCard").scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function animateBar(id, pct) {
+  const el = document.getElementById(id);
+  el.style.width = "0%";
+  setTimeout(() => { el.style.width = pct + "%"; }, 60);
+}
+
+function hideResult() {
+  document.getElementById("resultCard").style.display = "none";
+}
+
+function resetCheck() {
+  hideResult();
+  document.getElementById("newsText").value = "";
+  document.getElementById("newsUrl").value  = "";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function setLoading(on) {
+  const btn = document.getElementById("checkBtn");
+  document.getElementById("btnLabel").style.display   = on ? "none"   : "inline";
+  document.getElementById("btnArrow").style.display   = on ? "none"   : "inline";
+  document.getElementById("btnSpinner").style.display = on ? "inline" : "none";
+  btn.disabled = on;
+}
+
+// ── History ────────────────────────────────────────────────────
+const HIST_KEY = "verifai_history_" + (session ? session.email : "anon");
+
+function getHistory() { return JSON.parse(localStorage.getItem(HIST_KEY) || "[]"); }
+function saveHistory(h) { localStorage.setItem(HIST_KEY, JSON.stringify(h.slice(0, 20))); }
+
+function addToHistory(text, data) {
+  const h = getHistory();
+  h.unshift({
+    text:       text.slice(0, 120),
+    result:     data.result,
+    label:      data.label,
+    score:      data.score,
+    confidence: data.confidence,
+    date:       new Date().toLocaleDateString("en-GB", { day:"numeric", month:"short", year:"numeric" })
+  });
+  saveHistory(h);
+  renderHistory();
+}
+
+function saveToHistory() {
+  alert("Report saved to your history.");
+  renderHistory();
+}
+
+function clearHistory() {
+  if (!confirm("Clear all history?")) return;
+  localStorage.removeItem(HIST_KEY);
+  renderHistory();
+}
+
+function renderHistory() {
+  const h    = getHistory();
+  const list = document.getElementById("historyList");
+  const empty = document.getElementById("historyEmpty");
+
+  if (!h.length) {
+    list.innerHTML  = "";
+    empty.style.display = "block";
+    return;
+  }
+  empty.style.display = "none";
+  list.innerHTML = h.map(item => `
+    <div class="history-item">
+      <div class="history-item-left">
+        <span class="history-badge history-badge-${item.result}">${item.label}</span>
+        <span class="history-text">${item.text}${item.text.length >= 120 ? "…" : ""}</span>
+      </div>
+      <div class="history-item-right">
+        <span class="history-score">${item.score}/100</span>
+        <span class="history-date">${item.date}</span>
+      </div>
+    </div>
+  `).join("");
+}
+
+renderHistory();
+</script>
+</body>
+</html>
