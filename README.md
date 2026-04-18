@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Verifai — Fake News Detection Web App
 
 A production-style news authenticity checker with authentication, a modern SaaS UI, a Python/Flask backend, and a complete CI/CD pipeline.
@@ -142,3 +143,6 @@ Logout   → clear session → redirect to /login
 | Auth | localStorage (frontend demo) |
 | DevOps | Docker, Docker Compose, Jenkins, GitHub |
 | Hosting | Render / Vercel (static proxy) |
+=======
+# fakenewsdetection
+>>>>>>> 15fdb99e2e7b0d44b364b424a7954b361a367110
